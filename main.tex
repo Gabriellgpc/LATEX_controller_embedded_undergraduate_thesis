@@ -1,0 +1,99 @@
+\documentclass[a4paper, 12pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[portuguese,brazil]{babel}
+\usepackage{amsmath, amssymb, amsfonts}
+\usepackage[a4paper,left=3cm,right=2cm,top=3cm,bottom=2cm]{geometry}
+% Caso não queira o 'geometry', pode-se usar:
+% \usepackage{a4wide}
+\usepackage{tabularx}
+\usepackage{graphicx}
+\usepackage{pslatex}
+\usepackage{indentfirst}
+\usepackage{setspace}
+\usepackage{verbatim}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{algpseudocode,algorithm}
+\usepackage[table,xcdraw]{xcolor}
+
+\begin{document}
+
+\thispagestyle{empty}
+
+\begin{minipage}{0.15\linewidth}
+\begin{flushleft}
+\includegraphics[width=\linewidth]{UFRN}
+\end{flushleft}
+\end{minipage}\hfill
+\begin{minipage}{0.65\linewidth}
+\centering Universidade Federal do Rio Grande do Norte\\
+Centro de Tecnologia\\
+Coordenação de Engenharia de Computação
+\end{minipage}\hfill
+\begin{minipage}{0.15\linewidth}
+\begin{flushright}
+\includegraphics[width=0.6\linewidth]{EngComp}
+\end{flushright}
+\end{minipage}
+
+
+\vfill
+
+\begin{center}
+% \LARGE{\bf Controle embarcado do tipo feedforward/backward para robô com 
+% acionamento diferencial, usando encoders magnéticos de baixa resolução}
+
+\Large{Controle embarcado do tipo feedforward/backward para robô com 
+acionamento diferencial, usando encoders magnéticos de baixa resolução}
+\end{center}
+
+\normalsize
+\vfill
+
+\begin{flushleft}
+{\bf Aluno(a):} Luís Gabriel Pereira Condados \\
+{\bf Orientador acadêmico:}Adelardo Adelino Dantas de Medeiros\\
+\end{flushleft}
+
+\vfill
+
+\begin{center}
+Natal, RN, \today.
+\end{center}
+
+\newpage
+
+\pagenumbering{roman}
+
+\begin{center}
+{\bf \Large Agradecimentos}
+\end{center}
+
+xxxxx.
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+% Colocar somente se necessáro...
+\listoffigures
+\addcontentsline{toc}{section}{Lista de Figuras}
+
+\newpage
+% Colocar somente se necessáro...
+\listoftables
+\addcontentsline{toc}{section}{Lista de Tabelas}
+
+\input{tex/introducao}
+\input{tex/referencial_teorico}
+\input{tex/metodologia}
+\input{tex/resultados}
+\input{tex/conclusao}
+
+\bibliography{bibliografia}
+\end{document}
+
+
