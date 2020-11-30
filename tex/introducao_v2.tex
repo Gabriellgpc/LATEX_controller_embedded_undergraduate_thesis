@@ -1,5 +1,10 @@
 \section{INTRODUÇÃO}
 
+% Notas:
+% Separar a intro. em subseções: 
+% Talvez: contextualização e intro. à robocup/VSSS
+% Falar sobre a organização do trabalho
+
 % Usei % [A Simple Speed Feedback System for Low Speed DC Motor Control in Robotic Applications] como ref. para o começo da intro.
 Uma forma muito comum de acionamento de motores de corrente continua (CC) é por meio da modulação por largura de pulso, ou do inglês Pulse Width Modulation (PWM), que consiste basicamente em manipular a tensão média de alimentação do motor por meio de sinais digitais [?]. É comum em certas aplicações o uso do sinal \emph{PWM} para manipular a velocidade do motor, ou seja, um controle de malha aberta [?], esse tipo de sistema apenas regula o quão rápido o motor irá girar. Porém na maioria das aplicações o controle em malha aberta não é suficiente/satisfatório, como por exemplo, não há garantias que se aplicado tensões iguais (\emph{PWM}) em ambos os motores de um robô com acionamento diferencial (robôs com duas rodas tracionadas e independentes) o movimento será estritamente linear, isso devi-se as diferenças entre os dois conjuntos de motores/rodas que fazem com que esses não girem a uma mesma velocidade, mesmo sobre uma mesma tensão.\\
 
@@ -8,10 +13,11 @@ Em contraste com o sistema de malha aberta, um sistema de malha fechada utiliza 
 % [Speed Measurement Algorithms for Low-Resolution Incremental Encoder Equipped Drives: a Comparative Analysis]
 Portando, ter-se um bom \emph{feedback} em sistemas de controle em malha fechada é de extrema importância [?], tanto para se trabalhar em alta performance, quanto para garantir a estabilidade do sistema [?]. No contexto de controle de rotação de motores, os sensores mais comuns são os codificadores de eixo (\emph{Encoders}). Os dois principais tipos são: \emph{Encoders} absolutos e os incrementais. O primeiro fornece a informação da posição angular absoluta e o segundo uma informação da variação de giro. \\
 
-A resolução desses sensores influencia fortemente no desempenho e até mesmo na viabilidade do controlador, porém, sensores com resoluções maiores são, por consequência, mais caros, fazendo-se que seja necessário um \emph{trade-off} entre custo e desempenho. Existem diversas técnicas que tentam melhorar a estimativa da velocidade sem que seja necessário o uso de sensores mais precisos [?][?][?], um tipo de técnica que geralmente é usada para esse fim são os estimadores de estado [?][?], que calculam uma estimativa da velocidade a partir dos dados do sensor e de algum conhecimento sobre o comportamento do sistema. Porém, também existe um \emph{trade-off} com relação a qual estimador usar, bons estimadores exigem mais poder computacional e/ou exigem que tenha-se mais conhecimento sobre a planta. O que pode ser um problema para certos tipos de aplicações, como por exemplo, uma aplicação que deve rodar em um microcontrolador ($\mu$C) de um robô.\\
+A resolução desses sensores influencia fortemente no desempenho e até mesmo na viabilidade do controlador, porém, sensores com resoluções maiores são, por consequência, mais caros, fazendo-se que seja necessário um \emph{trade-off} entre custo e desempenho. Existem diversas técnicas que tentam melhorar a estimativa da velocidade sem que seja necessário o uso de sensores mais precisos [?][?][?], um tipo de técnica que geralmente é usada para esse fim são os estimadores de estado [?][?], que calculam uma estimativa da velocidade a partir dos dados do sensor e de algum conhecimento sobre o comportamento do sistema. Porém, também existe um \emph{trade-off} com relação a qual estimador usar. Bons estimadores exigem mais poder computacional e/ou exigem que tenha-se mais conhecimento sobre a planta. O que pode ser um problema para certos tipos de aplicações, como por exemplo, uma aplicação que deve rodar em um microcontrolador ($\mu$C) de um robô.\\
 
 
-Este trabalho propõe-se a apresentar uma solução e implementação de um sistema de controle de velocidade de rotação para motores de corrente contínua, fazendo-se uso do filtro de \emph{Kalman} como estimador de velocidade. A aplicação alvo deste trabalho foram robôs com acionamento diferencial e com \emph{Encoders} de baixa resolução. Para a validação do trabalho foi feito a implementação do sistema proposto e embarcado em robôs de acionamento diferencial que foram projetados e desenvolvidos durante o trabalho. Os robôs projetados são voltados para a participação na Robocup[?] na categoria \emph{IEEE Very Small Size Soccer} (VSSS) por meio da equipe de Futebol de robôs do laboratório de robótica do Departamento de Computação e Automação (DCA) da UFRN, portanto, há limitações/desafios em seu projeto, principalmente com relação as suas dimensões, fazendo com que, por exemplo, seja difícil a utilização de \emph{Encoders} com alta precisão.\\
+
+Este trabalho propõe um sistema de controle de velocidade de rotação para motores de corrente contínua do tipo \emph{Feedforward}/\emph{backward} e que utiliza o filtro de \emph{Kalman} como estimador de velocidade (a partir de \emph{Encoders} incrementais). A aplicação alvo deste trabalho foram robôs com acionamento diferencial com \emph{Encoders} de baixa resolução. Para a validação do trabalho foi feito a implementação do sistema proposto e embarcado em robôs com acionamento diferencial que foram projetados e desenvolvidos durante o trabalho. Os robôs projetados são voltados para a participação na Robocup[?] na categoria \emph{IEEE Very Small Size Soccer} (VSSS) por meio da equipe de Futebol de robôs do laboratório de robótica do Departamento de Computação e Automação (DCA) da UFRN, portanto, há limitações/desafios em seu projeto, principalmente com relação as suas dimensões, fazendo com que, por exemplo, seja difícil a utilização de \emph{Encoders} com alta precisão.\\
 
 
 % Intro à Robocup, IEEE VSSS e Equipe Poti
@@ -27,6 +33,11 @@ O \textit{Hardware} projetado para esses robôs conta com um microcontrolador du
 Usando a interface \textit{Bluetooth} presente no microcontrolador, foi criado um  protocolo simples de comunicação para realizar operações de telemetria e telecomando nos robôs. O \textit{Firmware} opera utilizando os dois núcleos  executando tarefas distintas: um núcleo é responsável pela comunicação  com o servidor, por meio do \textit{Bluetooth} e do protocolo criado, bem como  por tratar as interrupções geradas pelos \textit{Encoders} rotativos magnéticos;  já o outro núcleo executa a rotina de controle, com um período de amostragem de pelo menos $5$ms, para operar em uma frequência de pelo menos duas vezes mais rápido que o sistema que está rodando no \emph{host}, que como já mencionado trabalha até à $100$fps ($10$ms).\\
 
 Para medir a velocidade de rotação, foram utilizados \textit{Encoders} magnéticos  rotativos, com resolução de $3$ pulsos por canal por revolução do eixo do motor. Para diminuir a  incerteza na estimativa da velocidade, é aplicado um filtro de \textit{Kalman},  considerando a planta (motores) como um sistema de primeira ordem. Os  parâmetros da planta (constante de tempo, zona morta e ganho \emph{PWM} x  Velocidade angular) são estimados/calculados por mínimos quadrados na  rotina de calibração presente no \textit{Firmware}, sendo em seguida utilizados  para determinar os parâmetros do controlador.
+
+
+% Organização do trabalho
+% Este trabalhado é organizado da seguinte maneira: O Capítulo 1 corresponde à introdução do trabalho, por meio da qual é feita uma contextualização do problema e a proposta de solução para o mesmo; o capítulo 2 traz a fundamentação teórica utilizada para o desenvolvimento deste trabalho; no capítulo 3, os objetivos gerais e específicos são abordados; no capítulo 4 são apresentados os materiais e métodos utilizados para implementação do sistema; o capítulo 5 contém os resultados e discussões em que podem ser observadas as telas do sistema proposto; no capítulo 6 as conclusões deste trabalho são levadas em consideração, assim como sugestões de trabalhos futuros.
+
 
 % [High-Performance Speed Control of Electric Machine Using Low-Precision Shaft Encoder]
 
@@ -105,22 +116,3 @@ Para medir a velocidade de rotação, foram utilizados \textit{Encoders} magnét
 % mquimment to achieve a good dynamic msponse, but it usually
 % implies a delay in the speed conbol loop, which can cause stability
 % problems.
-
-
-
-% Start 01:
-% Começar falando sobre controladores voltados a motores, controle de velocidade angular e controle de posição. A partir disso, mencionar os sensores mais utilizados e a importância/limitações com relação a sua precisão e como isso influência o desempenho dos controladores.
-
-% Start 02:
-% Começar falando sobre motores elétricos, sua importância em diversas áreas. mencionar a alta relevância em robótica móvel. introduzir sobre os controladores voltados para motores: controle de velocidade angular e controle de posição. A partir da introdução sobre os controladores falar da importância dos sensores e citar alguns tipos. Falar da relação/importância entre precisão/acurácia  dos sensores e a relação entre custo e limitações com relação ao tamanho do sensor para certas aplicações.
-
-% Introdução ao trabalho desenvolvido:
-
-%O trabalho apresenta uma proposta de sistema simples e eficiente de observação e controle de velocidade angular para motores elétricos de corrente contínua. Para a validação, o sistema foi implementado e embarcado no hardware de robôs com acionamento diferencial. 
-
-% O trabalho propõe uma sistema de observação de velocidade angular e controle de velocidade angular para motores elétricos utilizando-se de encoders com baixa resolução. A metodologia foi analisada implementando-se o sistema de controle bem como a metologia 
-
-% Organização do trabalho
-% Este trabalhado é organizado da seguinte maneira: O Capítulo 1 corresponde à introdução do trabalho, por meio da qual é feita uma contextualização do problema e a proposta de solução para o mesmo; o capítulo 2 traz a fundamentação teórica utilizada para o desenvolvimento deste trabalho; no capítulo 3, os objetivos gerais e específicos são abordados; no capítulo 4 são apresentados os materiais e métodos utilizados para implementação do sistema; o capítulo 5 contém os resultados e discussões em que podem ser observadas as telas do sistema proposto; no capítulo 6 as conclusões deste trabalho são levadas em consideração, assim como sugestões de trabalhos futuros.
-
-% Introdução ao projeto de Futebol de robôs, dando uma ideia geral sobre os desafios da categoria e uma visão geral sobre o sistema da equipe Poti
