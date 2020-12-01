@@ -13,61 +13,54 @@ Nessa seção será apresentado de forma técnica e descritiva a metologia utili
 
 Rotina responsável por realizar a identificação dos parâmetros do modelo dos motores direito e esquerdo do robô: constante de tempo; ganho de malha aberta; parâmetros do controlador \emph{FeedForward}; velocidade máxima de cada motor. Bem como calcular os ganhos para o controlador \emph{PID} de forma a se obter uma resposta pré-definida em malha fechada.\\
 
-A rotina de calibração consiste em três etapas que são repetidas para todas as configurações: motor direito para frente; motor direito para trás; motor esquerdo para frente e motor esquerdo para trás. Cada etapa é descrita a seguir: 
+A rotina de calibração consiste em três etapas que são repetidas para todas as configurações: motor direito para frente; motor direito para trás; motor esquerdo para frente e motor esquerdo para trás. Cada etapa é descrita a seguir: \\
 
 % TO DO:
 % ORGANIZAR E REPENSAR A FORMA DE EXIBIR AS ETAPAS
 % FIGURAS ILUSTRANDO O COMPORTAMENTO GERAL DAS FUNÇÕES QUE ESTÃO SENDO USADAS NA INTERPOLAÇÃO
 % PSEUDO CÓDIGOS TALVEZ
-\begin{itemize}
-    \item \textbf{ETAPA 1}: Estimar a zona morta e o ganho da planta em malha aberta\\
-    
-    Para isso é realizado a coleta de $N$ pontos ($\omega$,$u$), o primeiro ponto é coletado para $u = \pm1$(valor máximo no sentido de giro atual) e é realizado sucessivos decréscimos neste valor até a parada do motor ($\omega = 0$). \\
-    
-    Aplicar sinal de controle atual ($u_i$);\\
-    Aguardar um tempo fixo, pré-determinado, para garantir a leitura de $\omega_{ss}$(velocidade de máxima/velocidade de regime)
-    Armazenar ($u_i$,$\omega_{ss}$).\\
-    
-    A aquisição destes pontos ocorre da maior velocidade para a menor devido à zona morta ser mais baixa neste sentido, por causa da inercia do motor.\\
-    
-    Ao se encerrar a coleta destes pontos ($\omega_{ss} = 0$ detectado) é realizado uma regressão linear por \textit{MMQ}, tendo $\omega$ no eixo das ordenadas e $u$ no eixo das abscisas, o coeficiente angular dessa reta relaciona a velocidade angular ($\omega$) com o sinal de controle ($u$), já o coeficiente linear representa a zona morta, ou seja, o menor $u$ que pode iniciar o giro do motor.
-    
-    \begin{equation*}
-        u(\omega) = a\omega + b
-    \end{equation*}
-    
-    Com esses parâmetros dessa reta é possível estimar o ganho de malha aberta da planta da seguinte forma:
-    
-    \begin{equation*}
-        K = \frac{(u_{max} - b)}{a}
-    \end{equation*}
-        
-    \begin{figure}[H]
-        \centering
-        \includegraphics[width=0.5\textwidth]{imagens/ilustracoes/omega_x_sinal_controle.eps}
-        \caption{Comportamento da curva $u(\omega)$.}
-        \label{fig:ilustracao_omega_x_pwm}
-    \end{figure}    
-        
-    \item \textbf{ETAPA 2}: Estimar a constante de tempo
-    
-    Para obter a constante de tempo da planta na configuração atual, faz-se uso mais uma vez de interpolação por \textit{MMQ} e tira-se proveito do conhecimento do ganho da planta para simplificar e tornar possível essa interpolação de forma simples. Para estimar a constante de tempo obtém-se $M$ pontos ($t$,$\omega$) e aplica-se o \textit{MMQ} para uma interpolação linear, para isso é necessário fazer a seguinte alteração:
-        
 
-    \begin{align*}
-        \omega(t) &= K\left( 1 - e^{-t/T_m} \right)\\
-        \ln{\omega(t)} &= \ln\left[K( 1 - e^{-t/T_m})\right]\\
-        \ln\left(1 - \frac{\omega(t)}{K} \right) &= -\frac{t}{T_m}\\
-        y_{aux}(t) &= -\frac{t}{T_m}
-    \end{align*}
+\textbf{ETAPA 1.} Estimar a zona morta e o ganho da planta em malha aberta. Para isso é realizado a coleta de $N$ pontos ($\omega$,$u$), o primeiro ponto é coletado para $u = \pm1$(valor máximo no sentido de giro atual) e é realizado sucessivos decréscimos neste valor até a parada do motor ($\omega = 0$). \\
+
+% Aplicar sinal de controle atual ($u_i$);\\
+% Aguardar um tempo fixo, pré-determinado, para garantir a leitura de $\omega_{ss}$(velocidade de máxima/velocidade de regime)
+% Armazenar ($u_i$,$\omega_{ss}$).\\
+
+A aquisição destes pontos ocorre da maior velocidade para a menor, pois a zona morta será mais baixa neste sentido, devido a inercia do motor.\\
+
+Ao se encerrar a coleta destes pontos ($\omega_{ss} = 0$ detectado) é realizado uma regressão linear por \textit{MMQ}, tendo $\omega$ no eixo das ordenadas e $u$ no eixo das abscisas, o coeficiente angular dessa reta relaciona a velocidade angular ($\omega$) com o sinal de controle ($u$), já o coeficiente linear representa a zona morta, ou seja, o menor $u$ que pode iniciar o giro do motor.
+
+\begin{equation*}
+    u(\omega) = a\omega + b
+\end{equation*}
+
+Com esses parâmetros dessa reta é possível estimar o ganho de malha aberta da planta da seguinte forma:
+
+\begin{equation*}
+    K = \frac{(u_{max} - b)}{a}
+\end{equation*}
     
-    Convertendo $\omega(t)$ para $y_{aux}(t)$ o coeficiente angular resultante da interpolação linear será: $coef.angular = -\frac{1}{T_m}$, dessa forma obtemos a constante de tempo.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\textwidth]{imagens/ilustracoes/omega_x_sinal_controle.eps}
+    \caption{Comportamento da curva $u(\omega)$.}
+    \label{fig:ilustracao_omega_x_pwm}
+\end{figure}    
     
-    \item \textbf{ETAPA 3}: Calcular os parâmetros do controlador \textit{PID}
+\textbf{ETAPA 2.} Estimar a constante de tempo. Para obter a constante de tempo da planta na configuração atual, faz-se uso mais uma vez de interpolação por \textit{MMQ} e tira-se proveito do conhecimento do ganho da planta para simplificar e tornar possível essa interpolação de forma simples. Para estimar a constante de tempo obtém-se $M$ pontos ($t$,$\omega$) e aplica-se o \textit{MMQ} para uma interpolação linear, para isso é necessário fazer a seguinte alteração:
     
-    Como apresentado na seção de referencial teórico é possível relacionar o ganho do controlador proporcional com o polo desejado para o sistema em malha fechada, por meio da relação (??). Esse cálculo só é possível devido a identificação dos parâmetros da planta resultante das etapas anteriores. O polo desejado para todas as configurações da planta é uma constante pré-definida pelo usuário.
+
+\begin{align*}
+    \omega(t) &= K\left( 1 - e^{-t/T_m} \right)\\
+    \ln{\omega(t)} &= \ln\left[K( 1 - e^{-t/T_m})\right]\\
+    \ln\left(1 - \frac{\omega(t)}{K} \right) &= -\frac{t}{T_m}\\
+    y_{aux}(t) &= -\frac{t}{T_m}
+\end{align*}
+
+Convertendo $\omega(t)$ para $y_{aux}(t)$ o coeficiente angular resultante da interpolação linear será: $coef.angular = -\frac{1}{T_m}$, dessa forma obtemos a constante de tempo.\\
+
+\textbf{ETAPA 3.} Calcular os parâmetros do controlador \textit{Feedback}. Como apresentado na seção de referencial teórico é possível relacionar o ganho do controlador proporcional com o polo desejado para o sistema em malha fechada, por meio da relação (??). Esse cálculo só é possível devido a identificação dos parâmetros da planta resultante das etapas anteriores. O polo desejado para todas as configurações da planta é uma constante pré-definida pelo usuário.\\
     
-\end{itemize}
 
 Ao se passar por todas as configurações de motor/sentido a rotina seleciona a menor velocidade máxima apresentada por alguma dessas configurações e armazena esta velocidade como sendo a velocidade máxima atingida pelos motores deste robô, isso é importante, para assegurar que a referencia $\omega_{ref}$ seja factível para todas as configurações. \\
 
@@ -126,19 +119,63 @@ O controle é executado sozinho no núcleo secundário do ESP32 em \emph{loop} i
 
 Ao final do fluxo de controle tem-se o sinal de controle, este por sua vez é utilizado para configurar o sentido de giro e o sinal \emph{PWM} que deve ser aplicado no \emph{Driver} motor correspondente.
 
+% TODO
+\begin{algorithm}
+\caption{Rotina de Controle}
+\label{alg:rotina_leitura_sensores}
+\begin{algorithmic}[1]
+  \State $lookup\_table \gets $ \{0, 1, -1, 0, 0, 0, 0, 1, 0, 0, 0, -1, 0, 1, -1, 0\}
+
+  % atualiza o codigo
+  \State $code \gets (code << 2) + ((READ\_GPIO(CANAL\_A) << 1) + READ\_GPIO(CANAL\_B))$
+
+  \State $t_1 \gets get\_time()$ \Comment{Obtém o tempo atual em segundos.}
+  
+  \State $\Delta{t} \gets  t_1 - t_0$
+  
+  \State $t_0 \gets t_1$ \Comment{Atualiza a referência de tempo anterior $t_0$}
+  
+  \State $\omega_{medido} \gets \frac{2\pi}{N_{PR}*\Delta{t}}$ * $lookup\_table[code]$
+  
+  \If{ $queue\_input.empty()$ \textbf{E} nunca recebeu} \Comment{Verifica se tem os dados para usar o filtro.}
+    \State $queue\_output \gets \omega_{medido}$  \Comment{Coloca o $\omega_{medido}$ na fila de saída e encerra a rotina.}
+    \State return;
+  \EndIf
+  
+  \Comment{Caso tenha novos dados (fila de entrada não vazia) atualizar os dados presentes na rotina. Se não usar os dados anteriores.}
+  \State $\omega_{ss}$,$\tau$ $\gets  queue\_input$
+
+%   //predição
+  \Comment{Etapa de predição.}
+  \State $\check{\omega} \gets \omega_{medido}$ + $( \omega_{ss} - \omega_{medido} ) * (1 - exp(-\Delta{t}/\tau))$
+  \State $\check{P} \gets \hat{P} + Q$
+
+
+%   //atualização
+  \Comment{Etapa de atualização.}
+  \State $K_{gain} \gets \check{P} / (\check{P} + R)$
+  \State $\hat{\omega} \gets \check{\omega}$ + $K_{gain} * (\omega_{medido} - \check{\omega})$
+  \State $\hat{P} \gets (1 - K_{gain}) * \check{P}$ 
+  
+  \State $queue\_output \gets \hat{\omega}$
+\end{algorithmic}
+\end{algorithm}
+
+% ******************************************************************
 \subsubsection{Rotina de Leitura dos Sensores}
 % TODO:
 % REALIZAR ANÁLISE DE FREQ. MÁXIMA DE OPERAÇÃO DOS ENCODERS VS BANDA DISPONIVEL NAS INTERRUPÇÕES RESPONSAVEIS PELA LEITURA DOS ENCODERS
 
-Há duas interrupções associadas aos sinais provenientes dos \emph{Encoders} rotativos, uma para cada motor, cujo objetivo é calcular/medir a velocidade de rotação do eixo do motor ($\omega_{medido}$) bem como aplicar o filtro de \emph{Kalman} para uma melhor estimativa da mesma. As interrupções são provocadas pelas bordas dos pulsos de ambos os canais, fazendo com que a resolução do sensor seja utilizada ao máximo, pois dessa maneira os sensores que possuem uma resolução de três pulsos completos por revolução (em cada canal, ver Figura \ref{fig:ilustracao_uma_revolucao}) consegue acionar doze ($12$) vezes a interrupção que irá computar o $\omega_{motor}$, passando assim a ser ter uma resolução de doze pulsos por revolução.\\
+Há duas interrupções associadas aos sinais provenientes dos \emph{Encoders} rotativos, uma para cada motor, cujo objetivo é medir a velocidade de rotação do eixo do motor ($\omega_{medido}$) bem como aplicar o filtro de \emph{Kalman} para uma melhor estimativa da mesma ($\hat{\omega}$). As interrupções são provocadas pelas bordas dos pulsos de ambos os canais, fazendo com que a resolução do sensor seja utilizada ao máximo, pois dessa maneira os sensores que possuem uma resolução de três pulsos completos por revolução (em cada canal, ver Figura \ref{fig:ilustracao_uma_revolucao}) consegue acionar doze ($12$) vezes a interrupção que irá computar o $\omega_{motor}$, passando assim a ser ter uma resolução equivalente à doze pulsos por revolução.\\
 
-Para o cálculo do módulo da velocidade de rotação do eixo do motor faz-se:
-\begin{equation}
-    |\omega_{medido}| = \frac{2\pi}{NPR}\frac{1}{\Delta{t}}
-    \label{eq:modulo_omega_medido}
-\end{equation}
+Para o cálculo do módulo da velocidade de rotação do eixo do motor faz-se uso da medição pelo período do sinal (conforme a Equação \ref{eq:omega_periodimetro}) com os seguintes parâmetros:
 
-Onde $NPR$ é o número pulsos por revolução em um canal. Neste trabalho o $NPR$ é igual a três($3$). Já o intervalo $\Delta{t}$ é o intervalo entre bordas iguais em um canal, a Figura \ref{fig:sinal_em_quadratura_delta_t} ilustra esse intervalo para as bordas de subida de ambos os canais.\\
+\begin{itemize}
+    \item $N_{PR} = 6$. Pois são $6$ interrupções por canal (monitorando ambas as bordas de subida e descida);
+    \item $T_{hf} = 1\mu{}s$. O contador de alta precisão do $ESP32$ possui, idealmente, uma resolução de $1\mu{}s$ [?].
+\end{itemize}
+
+A escolha do método de leitura por periodímetro ao em vez do frequencímetro se deu devido ser possível a leitura imediata da velocidade, pois basta apenas uma interrupção para se ter uma medição e também devido a boa precisão da leitura para abaixas velocidades, mesmo que isso piore para altas velocidades (como mostrado na Equação \ref{eq:erro_quantizacao_periodimetro}). 
 
 \begin{figure}[H]
     \centering
@@ -147,48 +184,28 @@ Onde $NPR$ é o número pulsos por revolução em um canal. Neste trabalho o $NP
     \label{fig:ilustracao_uma_revolucao}
 \end{figure}
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.6\textwidth]{imagens/ilustracoes/sinal_em_quadratura_sentido_CCW_detalhada.eps}
-    \caption{Ilustração de um sinal em quadratura para uma revolução do eixo do motor sentido anti-horário para um \emph{Encoder} com a resolução de três pulsos por revolução, com destaque para o intervalo de tempo entre as bordas de subida de um mesmo canal.}
-    \label{fig:sinal_em_quadratura_delta_t}
-\end{figure}
+Já para se obter o sentido de rotação do motor, fez-se uso do padrão \emph{Gray Code} gerado pela diferença de fase entre os diferentes canais de um mesmo sensor. Uma maneira de fazer isso é ler os \emph{GPIO}'s associados aos canais do \emph{Encoder} e verificar o padrão em binário e inferir o sentido de rotação (conforme apresentado anteriormente). Porém esse procedimento apresentou uma alta taxa de erro na inferência do sentido para medias e altas velocidades. \\
 
-\input{tabelas/tabela_simple_code}
-
-Já para se obter o sentido de rotação do motor, faz-se uso do padrão \emph{Gray Code} gerado pela diferença de fase entre os diferentes canais de um mesmo sensor, uma maneira de fazer isso é ler os \emph{GPIO}'s associados aos canais do \emph{Encoder} e verificar o padrão em binário e inferir o sentido de rotação, a Figura \ref{fig:cw_signal} ilustrado isso para uma rotação no sentido horário e a Figura \ref{fig:ccw_signal} o anti-horário, esses códigos são apresentados na Tabela \ref{tab:tabela_simple_code}. Porém esse procedimento apresentou ser pouco eficiente em medias e altas rotações, devido a alta taxa de erro na inferência do sentido. \\
-
-
-A abordagem adotada aqui foi armazenar os dois \emph{bits}(sendo canal A bit mais significado) e concatenar/somar com os últimos dois \emph{bits} (da leitura anterior) deslocados em dois (equivalente à multiplicar por $2^2$ ou operar bit-a-bit: $bits_{anteriores} \ll 2$), criando assim um padrão com $4$ \emph{bits}, sendo os dois mais significados o padrão da leitura anterior e os dois menos significativos a leitura atual. Esse procedimento é ilustrado para uma rotação no sentido horário e no sentido anti-horário respectivamente nas Tabelas \ref{tab:tabela_gray_code_cw} e \ref{tab:tabela_gray_code_ccw}, dessa forma gera-se quatro($4$) padrões/códigos que caracterizam um tipo de rotação. Esse padrão de $4$\emph{bits} é armazenado de forma estática em um vetor(uma tabela de cola/ \emph{lookup table}) nas rotinas de ambos os motores, esse vetor mapeia o código binário em $1$, $-1$ ou zero para as combinações que não caracterizam um sentido de giro, o sinal do valor corresponde ao sentido horário ou anti-horário e depende do motor, um exemplo de \emph{lookup table} é apresentado na Tabela \ref{tab:lookup_table}.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.7\textwidth]{imagens/ilustracoes/sinal_enquadratura_sentido_CW.eps}
-    \caption{Sinal em quadratura para rotação no sentido horário.}
-    \label{fig:cw_signal}
-\end{figure}
+A abordagem adotada aqui foi armazenar os dois \emph{bits}(sendo canal A bit mais significado) e concatenar/somar com os últimos dois \emph{bits} (da leitura anterior) deslocados em dois (equivalente à multiplicar por $2^2$ ou operar bit-a-bit: $bits_{anteriores} << 2$), criando assim um padrão com $4$ \emph{bits}, sendo os dois mais significados o padrão da leitura anterior e os dois menos significativos a leitura atual. Esse procedimento é ilustrado para uma rotação no sentido horário e no sentido anti-horário respectivamente nas Tabelas \ref{tab:tabela_gray_code_cw} e \ref{tab:tabela_gray_code_ccw}, dessa forma gera-se quatro($4$) padrões/códigos que caracterizam um tipo de rotação. Esse padrão de $4$\emph{bits} é armazenado de forma estática em um vetor(uma tabela de cola/ \emph{lookup table}) nas rotinas de ambos os motores, esse vetor mapeia o código binário em $1$, $-1$ ou zero para as combinações que não caracterizam um sentido de giro, o sinal do valor corresponde ao sentido horário ou anti-horário e depende do motor. Os vetores \emph{lookup table} para ambos os motores são apresentados  nas Tabela \ref{tab:lookup_table_motor_esquerdo} e \ref{tab:lookup_table_motor_direito}.
 
 \input{tabelas/tabela_cw_gray_code}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.7\textwidth]{imagens/ilustracoes/sinal_enquadratura_sentido_CCW.eps}
-    \caption{Sinal em quadratura para rotação no sentido anti-horário.}
-    \label{fig:ccw_signal}
-\end{figure}
-
 \input{tabelas/tabela_ccw_gray_code}
-
-\input{tabelas/tabela_lookup_table}
+\input{tabelas/tabela_lookup_table_motor_esquerdo}
+\input{tabelas/tabela_lookup_table_motor_direito}
 
 Com a \emph{lookup table} e o módulo da velocidade é possível calcular a velocidade de rotação da seguinte forma:
 
 \begin{equation}
-    \omega_{medido} = \frac{2\pi}{NPR}\frac{table[code]}{\Delta{t}}
+    \omega_{medido} = \frac{2\pi}{N_{PR}\Delta{t}}table[code]
 \end{equation}
 
-A próxima etapa é a filtragem dessa velocidade, a rotina aplica o filtro de \emph{Kalman} (mais detalhes na seção de referencial teórico) considerando $omega(t)$ um sistema de primeira ordem, como apresentado na seção sobre modelagem de motores de corrente contínua essa pode ser uma boa aproximação se desconsiderar a influência da indutância interna do motor, isso faz com as variáveis do filtro sejam modeladas para:
+Sendo,
 
+\begin{equation*}
+    \Delta{t} = nT_{hf}
+\end{equation*}
+
+Uma vez calculado o $\omega_{medido}$, calcula-se em seguida a melhor estimativa para $\omega$ ($\hat{\omega}$) utilizando-se o filtro de \emph{Kalman}. Para isso é considerado que o sistema $\omega(t)$ possui um comportamento de primeira ordem (conforme Equação \ref{eq:motor_transf_func}), fazendo com que as variáveis do filtro sejam:
 
 \begin{equation*}
 \begin{cases}
@@ -207,12 +224,11 @@ z_k = \omega_{medido}
 Com isso a etapa de \textbf{predição} do filtro torna-se:
 % MUDAR O SIMBOLO QUE FAZ REFERENCIA À ENTRADA (u) DE ENTRADA
 \begin{align*}
-    \check{\omega}_k &= \hat{\omega}_{k-1} + u_k\left( 1 - e^{-\Delta{t}/T_m} \right)\\
-    \check{P}_k &= \hat{P}_{k-1} + Q_k
+    \check{\omega}_{k|k-1} &= \hat{\omega}_{k-1} + u_k\left( 1 - e^{-\Delta{t}/T_m} \right)\\
+    \check{P}_{k|k-1} &= \hat{P}_{k-1} + Q_k
 \end{align*}
 
-Sendo $u_k$ a entrada no instante $k$, $\Delta t = t_f - t_0$. $\Delta t$ é relativo ao sinal de entrada $u_k$, sendo $t_0$ o instante que o sinal é aplicado e $t_f$ o instante atual $k$.
-
+Sendo $u_k$ a entrada no instante $k$.\\
 
 E a etapa de atualização \textbf{Atualização} é:
 
@@ -222,41 +238,50 @@ K_k &= \check{P}_k \left( \check{P}_k + R_k \right)^{-1} = \frac{\check{P}_k}{\c
 \hat{P}_k &= \left( 1 - K_k \right) \check{P}_k
 \end{align*}
 
+Os parâmetros do filtro foram sintonizados experimentalmente.\\
 
-% colocar aqui pseudo código da rotina completa
+Um pseudo código ilustrando a rotina de leitura dos sensores é apresentado a seguir:
 
-% \begin{algorithm}
-% \caption{A Hough Transform for Squares Detection}
-% \label{alg:hough_for_squares}
-% \begin{algorithmic}[1]
-% \State initialize $M$ with zero. \Comment{Voting matrix initialized with zero.}
-% \ForAll{$(x',y')$ in $f(x,y)$}
-%     \If{$|\nabla{f(x',y')}| \geq $ edge threshold } \Comment{It's an edge.}
-        
-%         \State $p_0 \gets (x',y')$
-%         \State $\theta \gets \angle{\nabla{f(x',y')}} \mod{90^\circ}$ \Comment{Square's angle.}
-%         \State $\Vec{N_0} \gets \nabla{f(x',y')}/|\nabla{f(x',y')}|$
-%         \State $\Vec{N_1} \gets -\nabla{f(x',y')}/|\nabla{f(x',y')}|$
-%         \State $\Vec{N_2} \gets$ rotate $\Vec{N_1}$ on $90^\circ$\\
-        
-        
-%         \State Search for an edge point going in the direction of $\Vec{N_1}$ from $p_0$. \Comment{That will be the $p_1$ point.}\\
-        
-%         \State $l \gets |p_0 - p_1|$ \Comment{Square's size.}
-        
-%         \State $p_{middle} \gets (p_1 + p_0)/2$\\
-        
-%         \State Search for an edge point going in the direction of $\Vec{N_2}$ from $p_{middle}$. \Comment{That will be the $p_2$ point.}\\
-        
-%         \State $p_{center} \gets p_2 - \Vec{N_2}*l/2$ \Comment{$p_{center} = (x_c,y_c)$}
-        
-%         \State $M[x_c][y_c][l][\theta] \gets M[x_c][y_c][l][\theta] + 1$
-        
-%     \EndIf
-% \EndFor
-% \end{algorithmic}
-% \end{algorithm}
+\begin{algorithm}
+\caption{Rotina de Leitura dos Sensores}
+\label{alg:rotina_leitura_sensores}
+\begin{algorithmic}[1]
+  \State $lookup\_table \gets $ \{0, 1, -1, 0, 0, 0, 0, 1, 0, 0, 0, -1, 0, 1, -1, 0\}
 
+  % atualiza o codigo
+  \State $code \gets (code << 2) + ((READ\_GPIO(CANAL\_A) << 1) + READ\_GPIO(CANAL\_B))$
+
+  \State $t_1 \gets get\_time()$ \Comment{Obtém o tempo atual em segundos.}
+  
+  \State $\Delta{t} \gets  t_1 - t_0$
+  
+  \State $t_0 \gets t_1$ \Comment{Atualiza a referência de tempo anterior $t_0$}
+  
+  \State $\omega_{medido} \gets \frac{2\pi}{N_{PR}*\Delta{t}}$ * $lookup\_table[code]$
+  
+  \If{ $queue\_input.empty()$ \textbf{E} nunca recebeu} \Comment{Verifica se tem os dados para usar o filtro.}
+    \State $queue\_output \gets \omega_{medido}$  \Comment{Coloca o $\omega_{medido}$ na fila de saída e encerra a rotina.}
+    \State return;
+  \EndIf
+  
+  \Comment{Caso tenha novos dados (fila de entrada não vazia) atualizar os dados presentes na rotina. Se não usar os dados anteriores.}
+  \State $\omega_{ss}$,$\tau$ $\gets  queue\_input$
+
+%   //predição
+  \Comment{Etapa de predição.}
+  \State $\check{\omega} \gets \omega_{medido}$ + $( \omega_{ss} - \omega_{medido} ) * (1 - exp(-\Delta{t}/\tau))$
+  \State $\check{P} \gets \hat{P} + Q$
+
+
+%   //atualização
+  \Comment{Etapa de atualização.}
+  \State $K_{gain} \gets \check{P} / (\check{P} + R)$
+  \State $\hat{\omega} \gets \check{\omega}$ + $K_{gain} * (\omega_{medido} - \check{\omega})$
+  \State $\hat{P} \gets (1 - K_{gain}) * \check{P}$ 
+  
+  \State $queue\_output \gets \hat{\omega}$
+\end{algorithmic}
+\end{algorithm}
 
 % \subsubsection{Rotina de Telemetria}
 % TODO:
